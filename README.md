@@ -57,3 +57,16 @@ Proxmoxサーバの初期設定を行う（ローカルストレージ、Ceph)
 
 **注:** 実際のデバイス名は環境により異なるため、Phase 1で確認します。
 
+####  ディレクトリ構造
+
+```
+/var/lib/local-nvme/
+├── kubernetes/          # Kubernetes関連データ
+│   ├── etcd/           # etcdデータディレクトリ (VMマウント)
+│   └── local-volumes/  # Kubernetesローカルボリューム
+├── logs/               # 高速ログストレージ
+├── temp/               # 一時データ
+└── images/             # Proxmox VM/コンテナイメージ (Proxmox管理)
+    ├── template/
+    └── private/
+```
