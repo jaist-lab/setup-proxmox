@@ -1,5 +1,9 @@
 #!/bin/bash
 set -e
+# 1.prepair_workspace.sh
+
+echo "**全ノードで実行:**"
+
 # 作業ディレクトリ作成
 mkdir -p /root/storage-setup/{logs,scripts,backups}
 cd /root/storage-setup
