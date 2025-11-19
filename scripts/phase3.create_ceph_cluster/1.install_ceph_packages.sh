@@ -2,10 +2,16 @@
 
 echo "**全ノードで実行:**"
 
-# Ceph リポジトリ追加 (Squid)
-wget -q -O- 'https://download.ceph.com/keys/release.asc' | apt-key add -
+echo "=== Installing Ceph Packages ==="
 
-echo "deb https://download.ceph.com/debian-squid/ $(lsb_release -sc) main" | \
+# Ceph GPGキーのダウンロードと配置（新方式）
+echo "Adding Ceph repository GPG key..."
+wget -q -O- 'https://download.ceph.com/keys/release.asc' | \
+    gpg --dearmor -o /usr/share/keyrings/ceph-archive-keyring.gpg
+
+# Cephリポジトリ追加（新方式）
+echo "Adding Ceph repository..."
+echo "deb [signed-by=/usr/share/keyrings/ceph-archive-keyring.gpg] https://download.ceph.com/debian-squid/ $(lsb_release -sc) main" | \
     tee /etc/apt/sources.list.d/ceph.list
 
 # パッケージリスト更新
