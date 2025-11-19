@@ -3,9 +3,9 @@
 
 echo "**全ノードで実行:**"
 
-echo "=== Installing Ceph Packages (Version Fix) ==="
+echo "=== Installing Ceph Packages (Downgrade to pve1) ==="
 
-# 外部Cephリポジトリを削除
+# 外部リポジトリ削除
 rm -f /etc/apt/sources.list.d/ceph.list
 rm -f /usr/share/keyrings/ceph-archive-keyring.gpg
 
@@ -13,58 +13,41 @@ rm -f /usr/share/keyrings/ceph-archive-keyring.gpg
 apt-get update
 
 echo ""
-echo "Current Ceph packages:"
-dpkg -l | grep ceph | grep ^ii
+echo "Step 1: Downgrading existing packages to pve1..."
+
+# すべてのCephパッケージをpve1にダウングレード
+apt-get install -y --allow-downgrades \
+    ceph-base=19.2.3-pve1 \
+    ceph-common=19.2.3-pve1 \
+    ceph-mon=19.2.3-pve1 \
+    ceph-mds=19.2.3-pve1 \
+    ceph-fuse=19.2.3-pve1 \
+    libcephfs2=19.2.3-pve1 \
+    librados2=19.2.3-pve1 \
+    librbd1=19.2.3-pve1 \
+    python3-ceph-argparse=19.2.3-pve1 \
+    python3-ceph-common=19.2.3-pve1 \
+    python3-cephfs=19.2.3-pve1 \
+    python3-rados=19.2.3-pve1 \
+    python3-rbd=19.2.3-pve1
 
 echo ""
-echo "Checking available versions..."
-apt-cache policy ceph ceph-mgr ceph-osd
+echo "Step 2: Installing missing packages (pve1)..."
 
-# オプション1: pve2バージョンが利用可能か確認してインストール
-echo ""
-echo "Attempting to install ceph-mgr and ceph-osd with pve2..."
+# 不足しているパッケージをインストール
 apt-get install -y \
-    ceph-mgr=19.2.3-pve2 \
-    ceph-osd=19.2.3-pve2 \
-    libsqlite3-mod-ceph=19.2.3-pve2 \
-    ceph-volume=19.2.3-pve2 2>/dev/null
+    ceph-mgr=19.2.3-pve1 \
+    ceph-osd=19.2.3-pve1 \
+    ceph-volume=19.2.3-pve1 \
+    libsqlite3-mod-ceph=19.2.3-pve1
 
-# インストールできなかった場合は既存バージョンを使用
-if [ $? -ne 0 ]; then
-    echo ""
-    echo "⚠️  Version 19.2.3-pve2 not available for all packages"
-    echo "Checking if we can proceed with existing packages..."
-    
-    # 既にインストール済みのパッケージで必要なものが揃っているか確認
-    MISSING=""
-    
-    # ceph-mgrの確認
-    if ! dpkg -l | grep -q "^ii.*ceph-mgr"; then
-        MISSING="${MISSING} ceph-mgr"
-    fi
-    
-    # ceph-osdの確認
-    if ! dpkg -l | grep -q "^ii.*ceph-osd"; then
-        MISSING="${MISSING} ceph-osd"
-    fi
-    
-    if [ -n "${MISSING}" ]; then
-        echo "ERROR: Missing critical packages:${MISSING}"
-        echo "Trying to install available version..."
-        apt-get install -y ceph-mgr ceph-osd --allow-downgrades
-    else
-        echo "✓ All critical Ceph packages are already installed"
-    fi
-fi
-
-# cephメタパッケージ（オプショナル）
 echo ""
-echo "Attempting to install ceph metapackage..."
-apt-get install -y ceph=19.2.3-pve2 2>/dev/null || \
-    echo "⚠️  ceph metapackage not installed (not critical)"
+echo "Step 3: Installing optional packages..."
 
-# radosgw（オプショナル - 必要な場合のみ）
-# apt-get install -y radosgw 2>/dev/null || true
+# オプショナルパッケージ
+apt-get install -y \
+    radosgw=19.2.3-pve1 \
+    ceph=19.2.3-pve1 2>/dev/null || echo "⚠️  ceph metapackage skipped"
 
 echo ""
 echo "=== Final Package Status ==="
@@ -77,8 +60,11 @@ ceph --version
 echo ""
 echo "Critical commands check:"
 which ceph-mon && echo "✓ ceph-mon available"
-which ceph-mgr && echo "✓ ceph-mgr available" || echo "✗ ceph-mgr missing"
-which ceph-osd && echo "✓ ceph-osd available" || echo "✗ ceph-osd missing"
+which ceph-mgr && echo "✓ ceph-mgr available"
+which ceph-osd && echo "✓ ceph-osd available"
+which ceph-volume && echo "✓ ceph-volume available"
+which monmaptool && echo "✓ monmaptool available"
+which ceph-authtool && echo "✓ ceph-authtool available"
 
 echo ""
 echo "=== Installation completed ==="
