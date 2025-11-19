@@ -4,21 +4,47 @@
 # デバイス割り当て記録シート
 
 r760xs1:
-  local_storage: /dev/nvme0n1 (3.7TiB)
-  ceph_osds:
-    - /dev/nvme1n1 (3.7TiB)
-    - /dev/nvme2n1 (3.7TiB)
-    - /dev/nvme3n1 (3.7TiB)
-    - /dev/nvme4n1 (3.7TiB)
+  Local Storage (etcd, logs):
+    Device: /dev/nvme0n1
+  Ceph OSD (distributed storage):
+    Device: /dev/nvme1n1 ( 3.7T)
+    Device: /dev/nvme2n1 ( 3.7T)
+    Device: /dev/nvme3n1 ( 3.7T)
 
 r760xs2:
-  local_storage: /dev/nvme0n1 (3.7TiB)
-  ceph_osds:
-    - /dev/nvme1n1 (3.7TiB)
-    - /dev/nvme2n1 (3.7TiB)
-    - /dev/nvme3n1 (3.7TiB)
-    - /dev/nvme4n1 (3.7TiB)
-    - /dev/nvme5n1 (3.7TiB)
+  Local Storage (etcd, logs):
+    Device: /dev/nvme0n1
+  Ceph OSD (distributed storage):
+    Device: /dev/nvme1n1 ( 3.7T)
+    Device: /dev/nvme2n1 ( 3.7T)
+    Device: /dev/nvme3n1 ( 3.7T)
+    Device: /dev/nvme4n1 ( 3.7T)
 
-# r760xs3-5も同様に記録
+r760xs3:
+  Local Storage (etcd, logs):
+    Device: /dev/nvme0n1
+  Ceph OSD (distributed storage):
+    Device: /dev/nvme1n1 ( 3.7T)
+    Device: /dev/nvme2n1 ( 3.7T)
+    Device: /dev/nvme3n1 ( 3.7T)
+    Device: /dev/nvme4n1 ( 3.7T)
+
+r760xs4:
+  Local Storage (etcd, logs):
+    Device: /dev/nvme0n1
+  Ceph OSD (distributed storage):
+    Device: /dev/nvme1n1 ( 3.7T)
+    Device: /dev/nvme2n1 ( 3.7T)
+    Device: /dev/nvme3n1 ( 3.7T)
+    Device: /dev/nvme4n1 ( 3.7T)
+
+
+r760xs5:
+  Local Storage (etcd, logs):
+    Device: /dev/nvme0n1
+  Ceph OSD (distributed storage):
+    Device: /dev/nvme1n1 ( 3.7T)
+    Device: /dev/nvme2n1 ( 3.7T)
+    Device: /dev/nvme3n1 ( 3.7T)
+    Device: /dev/nvme4n1 ( 3.7T)
 ```
