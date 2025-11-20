@@ -2,8 +2,7 @@
 
 # 定期実行推奨 (cron)
 #!/bin/bash
-BACKUP_DIR="/root/backup-config/ceph-backup-$(date +%Y%m%d)"
-
+BACKUP_DIR="/root/ceph-backup-$(date +%Y%m%d)"
 mkdir -p ${BACKUP_DIR}
 
 # 設定ファイル
@@ -20,4 +19,5 @@ ceph osd tree > ${BACKUP_DIR}/osd-tree.txt
 ceph df > ${BACKUP_DIR}/cluster-df.txt
 
 tar -czf /root/ceph-backup-$(date +%Y%m%d).tar.gz ${BACKUP_DIR}
+mv /root/ceph-backup-$(date +%Y%m%d).tar.gz /root/backup-config
 rm -rf ${BACKUP_DIR}
