@@ -1,74 +1,58 @@
 #!/bin/bash
 # 2.local-nvme-mount.sh
 
-LOCAL_DEVICE="/dev/nvme0n1"
-PARTITION="${LOCAL_DEVICE}p1"
-MOUNT_POINT="/var/lib/local-nvme"
+#!/bin/bash
+# fix_local_nvme_storage.sh
 
-log_message() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a /root/storage-setup/logs/local-nvme-setup.log
-}
+echo "=== Fixing local-nvme storage on all nodes ==="
 
-log_message "===== Configuring mount point ====="
+# 1. 既存ストレージ削除
+echo "Removing existing storage configuration..."
+pvesm remove local-nvme
 
-# マウントポイント作成
-if [ ! -d "${MOUNT_POINT}" ]; then
-    log_message "Creating mount point: ${MOUNT_POINT}"
-    mkdir -p ${MOUNT_POINT}
-fi
+# 2. 全ノードでディレクトリ準備
+echo ""
+echo "Preparing directories on all nodes..."
+for node in r760xs{1..5}; do
+    echo "--- ${node} ---"
+    ssh ${node} << 'EOF'
+# imagesディレクトリ作成
+mkdir -p /var/lib/local-nvme/images/{template,private}
+chmod 755 /var/lib/local-nvme/images
 
-# UUID取得
-UUID=$(blkid -s UUID -o value ${PARTITION})
-log_message "Partition UUID: ${UUID}"
-
-if [ -z "${UUID}" ]; then
-    log_message "ERROR: Could not get UUID for ${PARTITION}"
-    exit 1
-fi
-
-# fstab エントリ作成
-FSTAB_ENTRY="UUID=${UUID}  ${MOUNT_POINT}  ext4  defaults,noatime,nodiratime,discard  0  2"
-
-# 既存エントリのチェック
-if grep -q "${MOUNT_POINT}" /etc/fstab; then
-    log_message "WARNING: Mount point already exists in /etc/fstab"
-    log_message "Existing entry:"
-    grep "${MOUNT_POINT}" /etc/fstab | tee -a /root/storage-setup/logs/local-nvme-setup.log
-    
-    read -p "Replace existing entry? (yes/no): " replace
-    if [ "$replace" = "yes" ]; then
-        # 既存エントリを削除
-        sed -i "\|${MOUNT_POINT}|d" /etc/fstab
-    else
-        log_message "Keeping existing entry"
-        exit 0
-    fi
-fi
-
-# fstab に追加
-log_message "Adding entry to /etc/fstab:"
-echo "${FSTAB_ENTRY}" >> /etc/fstab
-log_message "${FSTAB_ENTRY}"
-
-# fstab 検証
-log_message "Validating fstab..."
-if findmnt --fstab --target ${MOUNT_POINT} &> /dev/null; then
-    log_message "fstab entry is valid"
+# 確認
+if [ -d /var/lib/local-nvme/images ]; then
+    echo "✓ images directory exists"
+    ls -la /var/lib/local-nvme/ | grep images
 else
-    log_message "ERROR: fstab entry validation failed"
+    echo "✗ Failed to create images directory"
     exit 1
 fi
+EOF
+done
 
-# マウント
-log_message "Mounting ${PARTITION} to ${MOUNT_POINT}..."
-mount ${MOUNT_POINT}
+# 3. ストレージ登録（全ノードを一度に指定）
+echo ""
+echo "Registering storage with all nodes..."
+pvesm add dir local-nvme \
+    --path /var/lib/local-nvme/images \
+    --content vztmpl,backup,iso,rootdir,images \
+    --nodes r760xs1,r760xs2,r760xs3,r760xs4,r760xs5 \
+    --prune-backups keep-last=3 \
+    --shared 0
 
-if mountpoint -q ${MOUNT_POINT}; then
-    log_message "Successfully mounted"
-    df -h ${MOUNT_POINT} | tee -a /root/storage-setup/logs/local-nvme-setup.log
-else
-    log_message "ERROR: Mount failed"
-    exit 1
-fi
+# 4. 設定確認
+echo ""
+echo "=== Storage Configuration ==="
+cat /etc/pve/storage.cfg | grep -A 7 local-nvme
 
-log_message "===== Mount configuration completed ====="
+# 5. 全ノードでステータス確認
+echo ""
+echo "=== Storage Status on All Nodes ==="
+for node in r760xs{1..5}; do
+    echo "--- ${node} ---"
+    ssh ${node} "pvesm status | grep local-nvme"
+done
+
+echo ""
+echo "=== Fix completed ==="
